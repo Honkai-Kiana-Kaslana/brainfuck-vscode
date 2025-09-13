@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as DebugProtocol from '@vscode/debugprotocol';
 import * as path from 'path';
 import * as fs from 'fs';
 import { BrainFuckInterpreter, BrainFuckExecutionState } from './bfInterpreter';
@@ -14,7 +15,7 @@ class BrainFuckDebugAdapterDescriptorFactory implements vscode.DebugAdapterDescr
     }
 }
 
-interface BrainFuckLaunchRequestArguments extends vscode.DebugProtocol.LaunchRequestArguments {
+interface BrainFuckLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     program: string;
     input?: string;
     stopOnEntry?: boolean;
@@ -22,9 +23,9 @@ interface BrainFuckLaunchRequestArguments extends vscode.DebugProtocol.LaunchReq
 
 class BrainFuckDebugSession implements vscode.DebugAdapter {
     private sequence: number = 1;
-    private requestHandlers = new Map<string, (request: vscode.DebugProtocol.Request) => void>();
-    private eventEmitter = new vscode.EventEmitter<vscode.DebugProtocol.Event>();
-    private messageEmitter = new vscode.EventEmitter<vscode.DebugProtocol.Message>();
+    private requestHandlers = new Map<string, (request: DebugProtocol.Request) => void>();
+    private eventEmitter = new vscode.EventEmitter<DebugProtocol.Event>();
+    private messageEmitter = new vscode.EventEmitter<DebugProtocol.Message>();
     private interpreter: BrainFuckInterpreter;
     private executionState: BrainFuckExecutionState | null = null;
     private code: string = '';
@@ -32,8 +33,8 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
     private isRunning: boolean = false;
     private breakpoints: Map<string, number[]> = new Map();
     
-    onDidSendMessage: vscode.Event<vscode.DebugProtocol.Message> = this.messageEmitter.event;
-    onDidSendEvent: vscode.Event<vscode.DebugProtocol.Event> = this.eventEmitter.event;
+    onDidSendMessage: vscode.Event<DebugProtocol.Message> = this.messageEmitter.event;
+    onDidSendEvent: vscode.Event<DebugProtocol.Event> = this.eventEmitter.event;
     
     constructor() {
         this.interpreter = new BrainFuckInterpreter();
@@ -54,8 +55,8 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.requestHandlers.set('evaluate', this.evaluate.bind(this));
     }
     
-    handleMessage(message: vscode.DebugProtocol.Message): void {
-        const request = message as vscode.DebugProtocol.Request;
+    handleMessage(message: DebugProtocol.Message): void {
+        const request = message as DebugProtocol.Request;
         const handler = this.requestHandlers.get(request.command);
         if (handler) {
             handler(request);
@@ -68,18 +69,18 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         // 清理资源
     }
     
-    private sendResponse(response: vscode.DebugProtocol.Response): void {
+    private sendResponse(response: DebugProtocol.Response): void {
         response.seq = this.sequence++;
         this.messageEmitter.fire(response);
     }
     
-    private sendEvent(event: vscode.DebugProtocol.Event): void {
+    private sendEvent(event: DebugProtocol.Event): void {
         event.seq = this.sequence++;
         this.eventEmitter.fire(event);
     }
     
-    private sendErrorResponse(request: vscode.DebugProtocol.Request, message: string): void {
-        const response: vscode.DebugProtocol.ErrorResponse = {
+    private sendErrorResponse(request: DebugProtocol.Request, message: string): void {
+        const response: DebugProtocol.ErrorResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -90,8 +91,8 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private initialize(request: vscode.DebugProtocol.InitializeRequest): void {
-        const response: vscode.DebugProtocol.InitializeResponse = {
+    private initialize(request: DebugProtocol.InitializeRequest): void {
+        const response: DebugProtocol.InitializeResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -110,7 +111,7 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendEvent({ type: 'event', event: 'initialized' });
     }
     
-    private launch(request: vscode.DebugProtocol.LaunchRequest): void {
+    private launch(request: DebugProtocol.LaunchRequest): void {
         const args = request.arguments as BrainFuckLaunchRequestArguments;
         
         try {
@@ -127,7 +128,7 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
             const breakpoints = this.breakpoints.get(programPath) || [];
             this.executionState.breakpoints = new Set(breakpoints);
             
-            const response: vscode.DebugProtocol.LaunchResponse = {
+            const response: DebugProtocol.LaunchResponse = {
                 type: 'response',
                 seq: 0,
                 request_seq: request.seq,
@@ -155,9 +156,9 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         }
     }
     
-    private disconnect(request: vscode.DebugProtocol.DisconnectRequest): void {
+    private disconnect(request: DebugProtocol.DisconnectRequest): void {
         this.isRunning = false;
-        const response: vscode.DebugProtocol.DisconnectResponse = {
+        const response: DebugProtocol.DisconnectResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -167,14 +168,14 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private setBreakpoints(request: vscode.DebugProtocol.SetBreakpointsRequest): void {
+    private setBreakpoints(request: DebugProtocol.SetBreakpointsRequest): void {
         const args = request.arguments;
         const path = args.source.path as string;
         
         // 保存断点
         this.breakpoints.set(path, args.breakpoints.map((bp: any) => bp.line));
         
-        const response: vscode.DebugProtocol.SetBreakpointsResponse = {
+        const response: DebugProtocol.SetBreakpointsResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -190,8 +191,8 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private threads(request: vscode.DebugProtocol.ThreadsRequest): void {
-        const response: vscode.DebugProtocol.ThreadsResponse = {
+    private threads(request: DebugProtocol.ThreadsRequest): void {
+        const response: DebugProtocol.ThreadsResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -207,8 +208,8 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private stackTrace(request: vscode.DebugProtocol.StackTraceRequest): void {
-        const response: vscode.DebugProtocol.StackTraceResponse = {
+    private stackTrace(request: DebugProtocol.StackTraceRequest): void {
+        const response: DebugProtocol.StackTraceResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -226,8 +227,8 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private scopes(request: vscode.DebugProtocol.ScopesRequest): void {
-        const response: vscode.DebugProtocol.ScopesResponse = {
+    private scopes(request: DebugProtocol.ScopesRequest): void {
+        const response: DebugProtocol.ScopesResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -244,13 +245,13 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private variables(request: vscode.DebugProtocol.VariablesRequest): void {
+    private variables(request: DebugProtocol.VariablesRequest): void {
         if (!this.executionState) {
             this.sendErrorResponse(request, 'No execution state available');
             return;
         }
         
-        const variables: vscode.DebugProtocol.Variable[] = [];
+        const variables: DebugProtocol.Variable[] = [];
         
         // 显示指针附近的内存单元
         const start = Math.max(0, this.executionState.pointer - 5);
@@ -264,7 +265,7 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
             });
         }
         
-        const response: vscode.DebugProtocol.VariablesResponse = {
+        const response: DebugProtocol.VariablesResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -277,10 +278,10 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private continue(request: vscode.DebugProtocol.ContinueRequest): void {
+    private continue(request: DebugProtocol.ContinueRequest): void {
         this.continueExecution();
         
-        const response: vscode.DebugProtocol.ContinueResponse = {
+        const response: DebugProtocol.ContinueResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -290,7 +291,7 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private next(request: vscode.DebugProtocol.NextRequest): void {
+    private next(request: DebugProtocol.NextRequest): void {
         if (!this.executionState) {
             this.sendErrorResponse(request, 'No execution state available');
             return;
@@ -303,7 +304,7 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
             return true; // 暂停执行
         });
         
-        const response: vscode.DebugProtocol.NextResponse = {
+        const response: DebugProtocol.NextResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -313,12 +314,12 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private stepIn(request: vscode.DebugProtocol.StepInRequest): void {
+    private stepIn(request: DebugProtocol.StepInRequest): void {
         // 在BrainFuck中，stepIn与next相同
         this.next(request);
     }
     
-    private stepOut(request: vscode.DebugProtocol.StepOutRequest): void {
+    private stepOut(request: DebugProtocol.StepOutRequest): void {
         if (!this.executionState) {
             this.sendErrorResponse(request, 'No execution state available');
             return;
@@ -342,7 +343,7 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
             this.next(request);
         }
         
-        const response: vscode.DebugProtocol.StepOutResponse = {
+        const response: DebugProtocol.StepOutResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -352,10 +353,10 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private pause(request: vscode.DebugProtocol.PauseRequest): void {
+    private pause(request: DebugProtocol.PauseRequest): void {
         this.isRunning = false;
         
-        const response: vscode.DebugProtocol.PauseResponse = {
+        const response: DebugProtocol.PauseResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
@@ -365,9 +366,9 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
         this.sendResponse(response);
     }
     
-    private evaluate(request: vscode.DebugProtocol.EvaluateRequest): void {
+    private evaluate(request: DebugProtocol.EvaluateRequest): void {
         // 简单的表达式求值，可以扩展为更复杂的表达式
-        const response: vscode.DebugProtocol.EvaluateResponse = {
+        const response: DebugProtocol.EvaluateResponse = {
             type: 'response',
             seq: 0,
             request_seq: request.seq,
