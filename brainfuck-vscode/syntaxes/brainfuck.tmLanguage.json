@@ -1,0 +1,26 @@
+{
+  "scopeName": "source.bf",
+  "fileTypes": ["bf", "b", "brainfuck"],
+  "patterns": [
+    {
+      "name": "keyword.operator.pointer.bf",
+      "match": "[><]"
+    },
+    {
+      "name": "keyword.operator.value.bf",
+      "match": "[+-]"
+    },
+    {
+      "name": "keyword.operator.io.bf",
+      "match": "[.,]"
+    },
+    {
+      "name": "keyword.control.loop.bf",
+      "match": "[\\[\\]]"
+    },
+    {
+      "name": "comment.line.bf",
+      "match": "[^><+\\-.,\\[\\]]+"
+    }
+  ]
+}

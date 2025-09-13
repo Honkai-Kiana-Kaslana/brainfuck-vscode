@@ -1,0 +1,175 @@
+{
+  "name": "brainfuck-vscode",
+  "displayName": "BrainFuck Language Support",
+  "description": "Full-featured BrainFuck language support for VS Code",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers",
+    "Linters",
+    "Formatters"
+  ],
+  "activationEvents": [
+    "onLanguage:brainfuck",
+    "onCommand:brainfuck.run",
+    "onCommand:brainfuck.debug",
+    "onCommand:brainfuck.format"
+  ],
+  "main": "./out/extension.js",
+  "icon": "media/icon.png",
+  "contributes": {
+    "languages": [{
+      "id": "brainfuck",
+      "aliases": ["BrainFuck", "brainfuck", "bf"],
+      "extensions": [".bf", ".b", ".brainfuck"],
+      "configuration": "./language-configuration.json",
+      "icon": {
+        "light": "./media/icon-light.png",
+        "dark": "./media/icon-dark.png"
+      }
+    }],
+    "grammars": [{
+      "language": "brainfuck",
+      "scopeName": "source.bf",
+      "path": "./syntaxes/brainfuck.tmLanguage.json"
+    }],
+    "commands": [
+      {
+        "command": "brainfuck.run",
+        "title": "Run BrainFuck Program",
+        "category": "BrainFuck",
+        "icon": "$(play)"
+      },
+      {
+        "command": "brainfuck.debug",
+        "title": "Debug BrainFuck Program",
+        "category": "BrainFuck",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "brainfuck.format",
+        "title": "Format BrainFuck Code",
+        "category": "BrainFuck",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "brainfuck.insertTemplate",
+        "title": "Insert Hello World Template",
+        "category": "BrainFuck"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "brainfuck.run",
+          "when": "editorLangId == brainfuck"
+        },
+        {
+          "command": "brainfuck.debug",
+          "when": "editorLangId == brainfuck"
+        },
+        {
+          "command": "brainfuck.format",
+          "when": "editorLangId == brainfuck"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "brainfuck.run",
+          "group": "navigation",
+          "when": "editorLangId == brainfuck"
+        },
+        {
+          "command": "brainfuck.debug",
+          "group": "navigation",
+          "when": "editorLangId == brainfuck"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "brainfuck.format",
+          "when": "editorLangId == brainfuck"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "BrainFuck",
+      "properties": {
+        "brainfuck.tapeSize": {
+          "type": "number",
+          "default": 30000,
+          "description": "Size of the BrainFuck tape (memory cells)"
+        },
+        "brainfuck.enableComments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable non-command characters as comments"
+        },
+        "brainfuck.maxExecutionSteps": {
+          "type": "number",
+          "default": 1000000,
+          "description": "Maximum number of execution steps before termination (prevents infinite loops)"
+        },
+        "brainfuck.formatting.spacesPerIndent": {
+          "type": "number",
+          "default": 2,
+          "description": "Number of spaces per indentation level"
+        }
+      }
+    },
+    "debuggers": [
+      {
+        "type": "brainfuck",
+        "label": "BrainFuck Debugger",
+        "program": "./out/bfDebugAdapter.js",
+        "runtime": "node",
+        "configurationAttributes": {
+          "launch": {
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to the BrainFuck program to debug"
+              },
+              "input": {
+                "type": "string",
+                "description": "Input to provide to the program"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Stop at the first instruction",
+                "default": true
+              }
+            },
+            "required": ["program"]
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "brainfuck",
+            "name": "Launch BrainFuck Program",
+            "request": "launch",
+            "program": "${file}",
+            "stopOnEntry": true
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.70.0",
+    "@types/node": "16.x",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "vscode-debugprotocol": "^1.51.0"
+  }
+}
