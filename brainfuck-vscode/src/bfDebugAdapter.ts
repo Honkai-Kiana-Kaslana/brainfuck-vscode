@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as debugProtocol from '@vscode/debugprotocol';
 import * as path from 'path';
 import * as fs from 'fs';
 import { BrainFuckInterpreter, BrainFuckExecutionState } from './bfInterpreter';
@@ -416,4 +417,5 @@ class BrainFuckDebugSession implements vscode.DebugAdapter {
             }
         });
     }
+
 }
