@@ -2,7 +2,7 @@
 
 
 
-![BF](C:\Users\xyb_w\Videos\icon.png)
+![BF](icon.png)
 
 
 
@@ -174,5 +174,6 @@ npm run watch
 - 灵感来源于社区中的各种 BrainFuck 工具和实现
 
 ---
+
 
 享受编写 BrainFuck 代码的乐趣！如有任何问题或建议，请随时联系我们。
